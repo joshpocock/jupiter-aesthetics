@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+/* Jupiter Aesthetics: warm ivory, clay and espresso. Light only, by design. */
+:root {
+  --ivory: #f8f3ed;
+  --linen: #f1e8dd;
+  --shell: #fffdfa;
+  --line: #e7dccf;
+  --line-strong: #d8c8b6;
+  --line-input: #9c8a7a; /* 3:1 against white, so field edges are visible */
+  --ink: #2b221d;
+  /* Text colours below all reach 4.5:1 on ivory, shell and linen. */
+  --muted: #6f6258;
+  --clay: #9a5538;
+  --clay-deep: #7d4029;
+  --blush: #f0dfd2;
+  --sage: #4f6a52;
+  --amber: #86601a;
+  --rose: #a2463a;
+  --shadow-soft: 0 1px 2px rgb(43 34 29 / 0.04), 0 18px 48px -28px rgb(43 34 29 / 0.28);
+}
+
+@theme inline {
+  --color-ivory: var(--ivory);
+  --color-linen: var(--linen);
+  --color-shell: var(--shell);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-line-input: var(--line-input);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-clay: var(--clay);
+  --color-clay-deep: var(--clay-deep);
+  --color-blush: var(--blush);
+  --color-sage: var(--sage);
+  --color-amber: var(--amber);
+  --color-rose: var(--rose);
+  --font-sans: var(--font-jost);
+  --font-serif: var(--font-cormorant);
+  --shadow-soft: var(--shadow-soft);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--ivory);
+  color: var(--ink);
+  font-feature-settings: "kern", "liga";
+}
+
+::selection {
+  background: var(--blush);
+  color: var(--ink);
+}
+
+/* Layered, so utilities (rounded corners, focus:outline-none on inputs) still win. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--clay);
+    outline-offset: 3px;
+  }
+
+  /* Cormorant's default old-style figures make "1" read like "I" in dates and times. */
+  .font-serif {
+    font-variant-numeric: lining-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Typography */
+@utility display {
+  @apply font-serif lining-nums text-[2.75rem] leading-[1.02] font-medium tracking-[-0.01em] text-balance sm:text-6xl lg:text-7xl;
+}
+@utility heading {
+  @apply font-serif lining-nums text-[2.25rem] leading-[1.08] font-medium tracking-[-0.005em] text-balance sm:text-5xl;
+}
+@utility subheading {
+  @apply font-serif lining-nums text-2xl leading-tight font-medium sm:text-[1.75rem];
+}
+@utility lede {
+  @apply text-[1.0625rem] leading-relaxed text-pretty text-muted sm:text-lg;
+}
+@utility eyebrow {
+  @apply text-[0.6875rem] font-medium tracking-[0.24em] text-clay uppercase;
+}
+
+/* Buttons: every one is at least 48px tall for comfortable tapping. */
+@utility btn {
+  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-7 text-[0.9375rem] font-medium tracking-[0.01em] transition-[background-color,border-color,color,box-shadow,transform] duration-200 select-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45;
+}
+@utility btn-primary {
+  @apply btn bg-ink text-ivory shadow-[0_10px_24px_-14px_rgb(43_34_29/0.7)] hover:bg-clay-deep;
+}
+@utility btn-secondary {
+  @apply btn border border-line-strong bg-shell text-ink hover:border-ink;
+}
+@utility btn-ghost {
+  @apply btn px-4 text-muted hover:bg-linen hover:text-ink;
+}
+@utility btn-danger {
+  @apply btn border border-rose/30 bg-shell text-rose hover:border-rose hover:bg-rose hover:text-shell;
+}
+@utility btn-lg {
+  @apply min-h-14 px-9 text-base;
+}
+
+/* Forms: 16px text so phones don't zoom on focus. */
+@utility label {
+  @apply mb-2 block text-[0.9375rem] font-medium text-ink;
+}
+@utility hint {
+  @apply mt-2 text-sm text-muted;
+}
+@utility input {
+  @apply block min-h-13 w-full rounded-2xl border border-line-input bg-shell px-4 py-3 text-base text-ink transition-colors placeholder:text-muted hover:border-ink focus:border-clay focus:ring-4 focus:ring-clay/12 focus:outline-none disabled:bg-linen disabled:text-muted;
+}
+
+/* Surfaces */
+@utility card {
+  @apply rounded-[1.75rem] border border-line bg-shell p-6 shadow-soft sm:p-10;
+}
+@utility panel {
+  @apply rounded-[1.75rem] bg-linen p-6 sm:p-8;
+}
+@utility link {
+  @apply text-clay underline decoration-clay/30 underline-offset-4 transition-colors hover:text-clay-deep hover:decoration-clay-deep;
+}
+
+/* The brand mark: a softly banded planet. */
+@utility planet {
+  background:
+    repeating-linear-gradient(
+      172deg,
+      rgb(255 255 255 / 0) 0 9%,
+      rgb(255 247 238 / 0.22) 9% 12%,
+      rgb(255 255 255 / 0) 12% 19%,
+      rgb(135 71 49 / 0.14) 19% 22%
+    ),
+    radial-gradient(circle at 32% 28%, #fbeee2 0%, #ecc9ae 30%, #d39a78 58%, #b06a4a 80%, #8e4c33 100%);
+  border-radius: 9999px;
+  box-shadow:
+    inset -18px -22px 48px rgb(110 52 32 / 0.35),
+    inset 14px 12px 36px rgb(255 245 235 / 0.5),
+    0 40px 90px -40px rgb(135 71 49 / 0.55);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@utility rise {
+  animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
