@@ -23,7 +23,8 @@ function splitBookings(bookings: Booking[], now = new Date()) {
   const resumable = [...history]
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
     .find((b) => isResumable(b, now) && !bookedTimes.has(Date.parse(b.slot_start)));
-  return { active: active.reverse(), history, resumable };
+  // It's still an unpaid booking to the client, shown once under Upcoming rather than also in Past.
+  return { active: active.reverse(), history: history.filter((b) => b !== resumable), resumable };
 }
 
 const NOTICES: Record<string, string> = {
@@ -107,15 +108,16 @@ async function Content({ searchParams }: { searchParams: PageProps<"/account">["
           {resumable && (
             <article className="card rise">
               <div className="flex flex-wrap gap-2">
-                <BookingBadge status="expired" />
+                <BookingBadge status="pending_payment" />
                 <DepositBadge status="unpaid" />
               </div>
               <p className="mt-5 font-serif text-[1.875rem] leading-tight font-medium sm:text-4xl">
                 {formatSlot(resumable.slot_start)}
               </p>
-              <p className="mt-3 text-muted">
-                Your hold on this time was released before the deposit was paid. Resume payment to book it
-                again, if it&apos;s still free.
+              <p className="mt-2 text-muted">Complimentary consultation · 30 minutes</p>
+              <p className="mt-5 rounded-2xl bg-amber/8 px-5 py-4 text-[0.9375rem] text-amber">
+                Your 35-minute hold ended before the deposit was paid, so this time isn&apos;t reserved yet. Pay
+                the deposit to secure it while it&apos;s still free.
               </p>
               <div className="mt-8 border-t border-line pt-6">
                 <ResumeHold bookingId={resumable.id} />
