@@ -49,6 +49,21 @@ Check the database rules (double booking, RLS, payment functions) against your p
 node --env-file=.env.local scripts/verify-db.mjs
 ```
 
+## Automated end-to-end tests
+
+Give every scenario its own disposable account so scenarios can't cancel or replace each other's
+bookings (each client can hold one booking at a time, and starting a new booking releases their older
+unpaid hold). Create one in the state the scenario needs, and delete them all afterwards:
+
+```bash
+node --env-file=.env.local scripts/test-accounts.mjs create unpaid --base-url https://jupiter-aesthetics.vercel.app
+node --env-file=.env.local scripts/test-accounts.mjs cleanup
+```
+
+States: `new`, `intake`, `unpaid` (with an open Checkout), `released`, `confirmed`, `owner`. Credentials
+go to `.test-account.json` (git-ignored). Only `@example.test` addresses are ever created or deleted.
+For full isolation, point the script and a preview deployment at a separate Supabase test project.
+
 ## How it works
 
 - **Schedule** – `src/lib/schedule.ts` builds slots (America/New_York, 9:00–16:30 starts, Mon–Sat,

@@ -44,3 +44,6 @@ next-env.d.ts
 supabase/.temp/
 
 .vercel
+
+# E2E test account credentials written by scripts/test-accounts.mjs
+.test-account*.json

@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { effectiveStatus } from "@/lib/booking-state";
 import type { Booking, Profile } from "@/lib/types";
 
 export type OwnerRow = Booking & { client: Pick<Profile, "id" | "full_name" | "email" | "phone"> | null };
@@ -25,13 +26,18 @@ export async function loadOwnerRows(supabase: SupabaseClient, view: View, search
     .order("slot_start", { ascending: view === "upcoming" });
   if (view === "upcoming") query = query.in("status", ["confirmed", "pending_payment"]).gte("slot_start", iso);
   if (view === "past") query = query.eq("status", "confirmed").lt("slot_start", iso);
-  if (view === "cancelled") query = query.in("status", ["cancelled", "expired"]);
+  // Lapsed unpaid holds are still pending_payment in the table; they belong with expired ones.
+  if (view === "cancelled") query = query.in("status", ["cancelled", "expired", "pending_payment"]);
 
   const { data, error } = await query.limit(5000);
   if (error) throw error;
 
   const q = search.trim().toLowerCase();
-  const rows = (data ?? []) as OwnerRow[];
+  const rows = ((data ?? []) as OwnerRow[])
+    .map((r) => ({ ...r, status: effectiveStatus(r, now) }))
+    .filter((r) =>
+      view === "upcoming" ? r.status !== "expired" : view === "cancelled" ? r.status !== "pending_payment" : true,
+    );
   return q
     ? rows.filter((r) =>
         [r.client?.full_name, r.client?.email, r.client?.phone].some((v) => v?.toLowerCase().includes(q)),

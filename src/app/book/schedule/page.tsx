@@ -34,9 +34,13 @@ async function Content() {
   if (upcoming) {
     return (
       <div className="card rise">
-        <p className="eyebrow">Already booked</p>
+        <p className="eyebrow">You already have a consultation</p>
         <p className="subheading mt-4">{formatSlot(upcoming.slot_start)}</p>
-        <p className="mt-3 text-muted">You already have a consultation coming up. You can move it to another time.</p>
+        <p className="mt-3 text-muted">
+          Each client can have one upcoming consultation, so a new booking isn&apos;t needed. Reschedule to
+          move it to another time (your $50 deposit moves with it), or cancel it from My bookings if you&apos;d
+          rather start again.
+        </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link href={`/account/bookings/${upcoming.id}/reschedule`} className="btn-primary btn-lg">
             Reschedule

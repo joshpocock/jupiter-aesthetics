@@ -7,6 +7,7 @@ import { formatSlot, SPA_TIME_ZONE } from "@/lib/schedule";
 import type { Booking, Intake, Profile } from "@/lib/types";
 import { PageShell } from "@/components/brand";
 import { BookingBadge, DepositBadge } from "@/components/status-badge";
+import { effectiveStatus } from "@/lib/booking-state";
 
 export const metadata: Metadata = { title: "Client intake", robots: { index: false } };
 
@@ -85,7 +86,7 @@ async function Content({ params }: { params: PageProps<"/owner/clients/[id]">["p
             <li key={b.id} className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
               <span>{formatSlot(b.slot_start)}</span>
               <span className="flex flex-wrap gap-2">
-                <BookingBadge status={b.status} />
+                <BookingBadge status={effectiveStatus(b)} />
                 <DepositBadge status={b.deposit_status} />
               </span>
             </li>
