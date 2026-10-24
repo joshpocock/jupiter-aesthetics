@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { signInRedirect } from "@/lib/auth-redirect";
 import { SLOT_MINUTES } from "@/lib/schedule";
 import { siteUrl } from "@/lib/site";
 import type { Booking } from "@/lib/types";
@@ -19,13 +20,13 @@ function fold(line: string) {
 }
 
 /** An .ics file so clients can add their consultation to Apple, Google or Outlook calendars. */
-export async function GET(_request: Request, ctx: RouteContext<"/account/bookings/[id]/calendar">) {
+export async function GET(request: Request, ctx: RouteContext<"/account/bookings/[id]/calendar">) {
   const { id } = await ctx.params;
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return new Response("Not signed in", { status: 401 });
+  if (!user) return signInRedirect(request);
 
   const { data: booking } = await supabase
     .from("bookings")

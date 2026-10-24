@@ -102,6 +102,8 @@ export async function updatePassword(_prev: FormState, formData: FormData): Prom
 
 export async function signOut() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect("/");
+  // "local" ends only this browser's session. Supabase's default ("global") would also sign the
+  // client out on their phone, laptop and every other device mid-booking.
+  await supabase.auth.signOut({ scope: "local" });
+  redirect("/login?signed_out=1");
 }

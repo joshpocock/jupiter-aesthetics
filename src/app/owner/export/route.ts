@@ -1,4 +1,5 @@
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { signInRedirect } from "@/lib/auth-redirect";
 import { createClient } from "@/lib/supabase/server";
 import { loadOwnerRows, parseView } from "@/lib/owner";
 import { SPA_TIME_ZONE } from "@/lib/schedule";
@@ -18,10 +19,11 @@ export async function GET(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return new Response("Not signed in", { status: 401 });
+  // Browsers follow these, so an expired session goes through sign-in and straight back here.
+  if (!user) return signInRedirect(request);
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "owner") return new Response("Forbidden", { status: 403 });
+  if (profile?.role !== "owner") return NextResponse.redirect(new URL("/account", request.url));
 
   const view = parseView(request.nextUrl.searchParams.get("view"));
   const rows = await loadOwnerRows(supabase, view, request.nextUrl.searchParams.get("q") ?? "");

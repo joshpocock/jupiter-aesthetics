@@ -5,7 +5,8 @@ import { saveIntake } from "./actions";
 import { ActionForm } from "@/components/action-form";
 import { FormAlert } from "@/components/form-alert";
 import { SubmitButton } from "@/components/submit-button";
-import { CONSENT_TEXT } from "@/lib/consent";
+import { CONSENT_TEXT, CONSENT_VERSION } from "@/lib/consent";
+import { SPA_TIME_ZONE } from "@/lib/schedule";
 import type { Intake, Profile } from "@/lib/types";
 
 function Section({
@@ -38,6 +39,7 @@ export function IntakeForm({
 }) {
   const [state, action, pending] = useActionState(saveIntake, undefined);
   const editing = next === "/account";
+  const consented = intake?.consent_version === CONSENT_VERSION;
 
   return (
     <ActionForm action={action} className="space-y-6">
@@ -92,9 +94,22 @@ export function IntakeForm({
 
       <Section title="Consent">
         <label className="flex cursor-pointer items-start gap-4 rounded-2xl border border-line-strong bg-ivory p-5 transition-colors has-checked:border-clay has-checked:bg-blush/40">
-          <input type="checkbox" name="consent" required className="mt-0.5 size-6 shrink-0 cursor-pointer accent-[var(--clay)]" />
+          {/* Ticked when this client already agreed to the current wording; saving re-records it. */}
+          <input
+            type="checkbox"
+            name="consent"
+            required
+            defaultChecked={consented}
+            className="mt-0.5 size-6 shrink-0 cursor-pointer accent-[var(--clay)]"
+          />
           <span className="text-[0.9375rem] leading-relaxed">{CONSENT_TEXT}</span>
         </label>
+        {consented && intake && (
+          <p className="hint -mt-2">
+            You agreed to this on{" "}
+            {new Date(intake.consent_at).toLocaleDateString("en-US", { timeZone: SPA_TIME_ZONE, dateStyle: "long" })}.
+          </p>
+        )}
         <FormAlert state={state} />
         <SubmitButton className="btn-primary btn-lg w-full sm:w-auto" pending={pending} pendingText="Saving…">
           {editing ? "Save changes" : "Continue to choose a time"}

@@ -95,6 +95,12 @@ async function Content({ searchParams }: { searchParams: PageProps<"/account">["
                 <div className="mt-8 border-t border-line pt-6">
                   <BookingActions id={b.id} status={b.status} changeable={canChange(b.slot_start)} />
                 </div>
+                <Link
+                  href="/book/intake?next=/account"
+                  className="link mt-4 inline-flex min-h-11 items-center text-[0.9375rem]"
+                >
+                  Review my intake form
+                </Link>
               </article>
             ))
           )}
@@ -108,9 +114,15 @@ async function Content({ searchParams }: { searchParams: PageProps<"/account">["
             {history.map((b) => (
               <li key={b.id} className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
                 <span>{formatSlot(b.slot_start)}</span>
-                <span className="flex flex-wrap gap-2">
+                <span className="flex flex-wrap items-center gap-2">
                   <BookingBadge status={b.status} />
                   <DepositBadge status={b.deposit_status} />
+                  {/* An unpaid hold that ran out released its time; offer the way back in. */}
+                  {b.status === "expired" && b.deposit_status === "unpaid" && active.length === 0 && (
+                    <Link href="/book" className="link ml-1 inline-flex min-h-11 items-center text-sm">
+                      Choose a time again
+                    </Link>
+                  )}
                 </span>
               </li>
             ))}
