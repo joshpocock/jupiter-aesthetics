@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { bookingErrorMessage } from "@/lib/errors";
-import { closeCheckout, createDepositCheckout } from "@/lib/payments";
+import { createDepositCheckout } from "@/lib/payments";
 import { invalidateClientPages } from "@/lib/fresh";
 import { isResumable } from "@/lib/booking-state";
 import type { FormState } from "@/components/form-alert";
@@ -13,24 +13,12 @@ import type { Booking } from "@/lib/types";
 /**
  * Holds a slot and sends the client to a fresh Stripe Checkout for the deposit. Both new
  * bookings and "Resume payment" on a released hold go through here, so the no-double-booking
- * rules in create_pending_booking always apply.
+ * and three-upcoming-bookings rules in create_pending_booking always apply.
  */
 async function holdAndCheckout(slotIso: string, from: string): Promise<FormState> {
   const { supabase, user } = await requireUser(from);
 
-  // Close any Checkout page this client left open earlier; the database drops those holds.
-  const { data: stale } = await supabase
-    .from("bookings")
-    .select("stripe_checkout_session_id")
-    .eq("client_id", user.id)
-    .eq("status", "pending_payment");
-  const closed = await Promise.all((stale ?? []).map((b) => closeCheckout(b.stripe_checkout_session_id)));
-  if (closed.includes("paid")) {
-    invalidateClientPages();
-    redirect("/account");
-  }
-  if (closed.includes("unknown")) return { error: "We couldn't reach our payment provider. Please try again." };
-
+  // Other unpaid holds are left alone: each keeps its own 35 minutes and its own Checkout.
   const { data: booking, error } = await supabase
     .rpc("create_pending_booking", { p_slot: slotIso })
     .single<Booking>();

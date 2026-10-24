@@ -18,11 +18,11 @@ function splitBookings(bookings: Booking[], now = new Date()) {
   const history = bookings
     .filter((b) => !active.includes(b))
     .map((b) => ({ ...b, status: effectiveStatus(b, now) }));
-  // With nothing upcoming, offer the most recently made released hold back to the client.
-  const resumable =
-    active.length === 0
-      ? [...history].sort((a, b) => b.created_at.localeCompare(a.created_at)).find((b) => isResumable(b, now))
-      : undefined;
+  // Offer the most recently made released hold back, unless that time is already booked again.
+  const bookedTimes = new Set(active.map((b) => Date.parse(b.slot_start)));
+  const resumable = [...history]
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .find((b) => isResumable(b, now) && !bookedTimes.has(Date.parse(b.slot_start)));
   return { active: active.reverse(), history, resumable };
 }
 
@@ -72,33 +72,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/account">["
       <section className="mt-12" aria-labelledby="upcoming">
         <h2 id="upcoming" className="eyebrow text-muted">Upcoming</h2>
         <div className="mt-4 space-y-4">
-          {active.length === 0 && resumable ? (
-            <article className="card rise">
-              <div className="flex flex-wrap gap-2">
-                <BookingBadge status="expired" />
-                <DepositBadge status="unpaid" />
-              </div>
-              <p className="mt-5 font-serif text-[1.875rem] leading-tight font-medium sm:text-4xl">
-                {formatSlot(resumable.slot_start)}
-              </p>
-              <p className="mt-3 text-muted">
-                Your hold on this time was released before the deposit was paid. Resume payment to book it
-                again, if it&apos;s still free.
-              </p>
-              <div className="mt-8 border-t border-line pt-6">
-                <ResumeHold bookingId={resumable.id} />
-              </div>
-            </article>
-          ) : active.length === 0 ? (
-            <div className="card">
-              <p className="subheading">No consultation booked yet.</p>
-              <p className="mt-3 text-muted">Choose a time that suits you. It only takes a few minutes.</p>
-              <Link href="/book" className="btn-primary btn-lg mt-8 w-full sm:w-auto">
-                Book a consultation
-              </Link>
-            </div>
-          ) : (
-            active.map((b) => (
+          {active.map((b) => (
               <article key={b.id} className="card rise">
                 <div className="flex flex-wrap gap-2">
                   <BookingBadge status={b.status} />
@@ -129,7 +103,38 @@ async function Content({ searchParams }: { searchParams: PageProps<"/account">["
                   Review my intake form
                 </Link>
               </article>
-            ))
+          ))}
+          {resumable && (
+            <article className="card rise">
+              <div className="flex flex-wrap gap-2">
+                <BookingBadge status="expired" />
+                <DepositBadge status="unpaid" />
+              </div>
+              <p className="mt-5 font-serif text-[1.875rem] leading-tight font-medium sm:text-4xl">
+                {formatSlot(resumable.slot_start)}
+              </p>
+              <p className="mt-3 text-muted">
+                Your hold on this time was released before the deposit was paid. Resume payment to book it
+                again, if it&apos;s still free.
+              </p>
+              <div className="mt-8 border-t border-line pt-6">
+                <ResumeHold bookingId={resumable.id} />
+              </div>
+            </article>
+          )}
+          {active.length > 0 && active.length < 3 && (
+            <Link href="/book/schedule" className="btn-secondary w-full sm:w-auto">
+              Book another consultation
+            </Link>
+          )}
+          {active.length === 0 && !resumable && (
+            <div className="card">
+              <p className="subheading">No consultation booked yet.</p>
+              <p className="mt-3 text-muted">Choose a time that suits you. It only takes a few minutes.</p>
+              <Link href="/book" className="btn-primary btn-lg mt-8 w-full sm:w-auto">
+                Book a consultation
+              </Link>
+            </div>
           )}
         </div>
       </section>

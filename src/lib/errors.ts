@@ -5,7 +5,7 @@ const MESSAGES: Record<string, string> = {
   intake_required: "Please complete your intake form first.",
   slot_unavailable: "That time can't be booked. Please pick another.",
   slot_taken: "Someone just booked that time. Please pick another.",
-  already_booked: "You already have an upcoming consultation. Reschedule it from your account instead.",
+  too_many_bookings: "You already have three upcoming consultations. Cancel or attend one before booking another.",
   not_found: "We couldn't find that booking.",
   not_confirmed: "Only confirmed bookings can be rescheduled.",
   not_active: "That booking is no longer active.",

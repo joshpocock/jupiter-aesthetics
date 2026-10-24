@@ -120,14 +120,26 @@ try {
   }).single();
   check("confirmation is idempotent", again.data?.status === "confirmed");
 
-  const second = await winnerId.client.rpc("create_pending_booking", { p_slot: testSlot(2) });
-  check("one upcoming consult per client", second.error?.message === "already_booked");
+  const second = await winnerId.client.rpc("create_pending_booking", { p_slot: testSlot(3) }).single();
+  check("a client with a consultation can book another", !second.error && second.data?.status === "pending_payment",
+    second.error?.message);
+
+  const holdA = await otherId.client.rpc("create_pending_booking", { p_slot: testSlot(4) }).single();
+  const holdB = await otherId.client.rpc("create_pending_booking", { p_slot: testSlot(5) }).single();
+  const { data: holdAAfter } = await otherId.client.from("bookings").select("status").eq("id", holdA.data?.id).single();
+  check("a new booking leaves the client's other unpaid hold alone",
+    !holdB.error && holdAAfter?.status === "pending_payment", holdB.error?.message ?? holdAAfter?.status);
 
   const moved = await winnerId.client.rpc("reschedule_booking", { p_booking: bookingId, p_slot: testSlot(2) }).single();
   check("reschedule keeps deposit", moved.data?.deposit_status === "paid" && Date.parse(moved.data?.slot_start) === Date.parse(testSlot(2)));
 
   const freed = await otherId.client.rpc("create_pending_booking", { p_slot: slot });
   check("old slot is free after reschedule", !freed.error, freed.error?.message);
+
+  // otherId now has three upcoming unpaid holds (testSlot 4, 5 and the freed slot).
+  const fourth = await otherId.client.rpc("create_pending_booking", { p_slot: testSlot(6) });
+  check("no more than three upcoming bookings per client", fourth.error?.message === "too_many_bookings",
+    fourth.error?.message ?? "fourth booking was allowed");
 
   const cancelled = await winnerId.client.rpc("cancel_booking", { p_booking: bookingId }).single();
   check("cancel works and leaves deposit paid",

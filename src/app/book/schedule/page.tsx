@@ -31,37 +31,29 @@ async function Content() {
     .limit(1)
     .maybeSingle();
 
-  if (upcoming) {
-    return (
-      <div className="card rise">
-        <p className="eyebrow">You already have a consultation</p>
-        <p className="subheading mt-4">{formatSlot(upcoming.slot_start)}</p>
-        <p className="mt-3 text-muted">
-          Each client can have one upcoming consultation, so a new booking isn&apos;t needed. Reschedule to
-          move it to another time (your $50 deposit moves with it), or cancel it from My bookings if you&apos;d
-          rather start again.
-        </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link href={`/account/bookings/${upcoming.id}/reschedule`} className="btn-primary btn-lg">
-            Reschedule
-          </Link>
-          <Link href="/account" className="btn-secondary btn-lg">
-            My bookings
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   const days = await loadSlotDays(supabase);
   return (
-    <SlotPicker
-      key={slotDaysKey(days)}
-      days={days}
-      action={bookSlot}
-      submitLabel="Continue to deposit"
-      note="We'll hold your time for 30 minutes while you pay."
-    />
+    <>
+      {/* This page always books a new consultation; moving an existing one is Reschedule. */}
+      {upcoming && (
+        <p className="panel mb-6 text-[0.9375rem] leading-relaxed">
+          You already have a consultation on <span className="font-medium">{formatSlot(upcoming.slot_start)}</span>.
+          Choosing a time here books an additional consultation with its own $50 deposit. To move your existing
+          one instead,{" "}
+          <Link href={`/account/bookings/${upcoming.id}/reschedule`} className="link">
+            reschedule it
+          </Link>
+          .
+        </p>
+      )}
+      <SlotPicker
+        key={slotDaysKey(days)}
+        days={days}
+        action={bookSlot}
+        submitLabel="Continue to deposit"
+        note="We'll hold your time for 30 minutes while you pay."
+      />
+    </>
   );
 }
 
