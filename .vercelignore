@@ -1,0 +1,5 @@
+# Never upload local secrets or tooling state
+.env*
+.claude
+supabase/.temp
+scripts
