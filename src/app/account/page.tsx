@@ -93,7 +93,12 @@ async function Content({ searchParams }: { searchParams: PageProps<"/account">["
                   </p>
                 )}
                 <div className="mt-8 border-t border-line pt-6">
-                  <BookingActions id={b.id} status={b.status} changeable={canChange(b.slot_start)} />
+                  <BookingActions
+                    key={`${b.status}-${b.slot_start}`}
+                    id={b.id}
+                    status={b.status}
+                    changeable={canChange(b.slot_start)}
+                  />
                 </div>
                 <Link
                   href="/book/intake?next=/account"

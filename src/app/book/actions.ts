@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { bookingErrorMessage } from "@/lib/errors";
 import { closeCheckout, createDepositCheckout } from "@/lib/payments";
+import { invalidateClientPages } from "@/lib/fresh";
 import type { FormState } from "@/components/form-alert";
 import type { Booking } from "@/lib/types";
 
@@ -23,7 +24,10 @@ export async function bookSlot(_prev: FormState, formData: FormData): Promise<Fo
     .eq("client_id", user.id)
     .eq("status", "pending_payment");
   const closed = await Promise.all((stale ?? []).map((b) => closeCheckout(b.stripe_checkout_session_id)));
-  if (closed.includes("paid")) redirect("/account");
+  if (closed.includes("paid")) {
+    invalidateClientPages();
+    redirect("/account");
+  }
   if (closed.includes("unknown")) return { error: "We couldn't reach our payment provider. Please try again." };
 
   const { data: booking, error } = await supabase
@@ -44,5 +48,6 @@ export async function bookSlot(_prev: FormState, formData: FormData): Promise<Fo
   }
   if (!url) return { error: "We couldn't start the payment. Please try again." };
 
+  invalidateClientPages(); // My bookings must show the new hold when they come back
   redirect(url);
 }

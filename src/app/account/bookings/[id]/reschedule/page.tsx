@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { canChange, formatSlot } from "@/lib/schedule";
+import { canChange, formatSlot, slotDaysKey } from "@/lib/schedule";
 import { loadSlotDays } from "@/lib/slots";
 import type { Booking } from "@/lib/types";
 import { PageHeader, PageShell } from "@/components/brand";
@@ -52,6 +52,7 @@ async function Content({ params }: { params: PageProps<"/account/bookings/[id]/r
       {header}
       <div className="mt-10">
         <SlotPicker
+          key={`${booking.slot_start}-${slotDaysKey(days)}`}
           days={days}
           action={rescheduleBooking}
           submitLabel="Move my consultation"

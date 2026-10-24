@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireUser, safeNext } from "@/lib/auth";
 import { CONSENT_VERSION } from "@/lib/consent";
+import { invalidateClientPages } from "@/lib/fresh";
 import type { FormState } from "@/components/form-alert";
 
 const text = (label: string, max = 4000) =>
@@ -48,5 +49,6 @@ export async function saveIntake(_prev: FormState, formData: FormData): Promise<
   });
   if (error) return { error: "We couldn't save your intake form. Please try again." };
 
+  invalidateClientPages();
   redirect(safeNext(formData.get("next"), "/book/schedule"));
 }

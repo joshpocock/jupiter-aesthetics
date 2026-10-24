@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { formatSlot } from "@/lib/schedule";
+import { formatSlot, slotDaysKey } from "@/lib/schedule";
 import { loadSlotDays } from "@/lib/slots";
 import { PageHeader, PageShell } from "@/components/brand";
 import { SlotPicker } from "@/components/slot-picker";
@@ -52,6 +52,7 @@ async function Content() {
   const days = await loadSlotDays(supabase);
   return (
     <SlotPicker
+      key={slotDaysKey(days)}
       days={days}
       action={bookSlot}
       submitLabel="Continue to deposit"

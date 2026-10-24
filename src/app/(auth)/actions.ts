@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { safeNext } from "@/lib/auth";
 import { siteUrl } from "@/lib/site";
+import { invalidateClientPages } from "@/lib/fresh";
 import type { FormState } from "@/components/form-alert";
 
 const credentials = z.object({
@@ -26,6 +27,7 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
           : "That email and password don't match.",
     };
   }
+  invalidateClientPages();
   redirect(safeNext(formData.get("next")));
 }
 
@@ -56,6 +58,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   if (!data.session) {
     return { message: "Check your email for a link to confirm your account, then continue booking." };
   }
+  invalidateClientPages();
   redirect(next);
 }
 
@@ -97,6 +100,7 @@ export async function updatePassword(_prev: FormState, formData: FormData): Prom
   }
   // Sign out any other device that might be using the old password.
   await supabase.auth.signOut({ scope: "others" });
+  invalidateClientPages();
   redirect("/account?changed=password");
 }
 
@@ -105,5 +109,6 @@ export async function signOut() {
   // "local" ends only this browser's session. Supabase's default ("global") would also sign the
   // client out on their phone, laptop and every other device mid-booking.
   await supabase.auth.signOut({ scope: "local" });
+  invalidateClientPages();
   redirect("/login?signed_out=1");
 }

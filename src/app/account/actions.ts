@@ -1,10 +1,11 @@
 "use server";
 
-import { refresh, revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { bookingErrorMessage } from "@/lib/errors";
 import { closeCheckout } from "@/lib/payments";
+import { invalidateClientPages } from "@/lib/fresh";
 import { stripe } from "@/lib/stripe";
 import type { FormState } from "@/components/form-alert";
 import type { Booking } from "@/lib/types";
@@ -38,7 +39,7 @@ export async function rescheduleBooking(_prev: FormState, formData: FormData): P
     return { error: bookingErrorMessage(error) };
   }
 
-  revalidatePath("/account");
+  invalidateClientPages();
   redirect("/account?changed=rescheduled");
 }
 
@@ -50,7 +51,7 @@ export async function cancelBooking(_prev: FormState, formData: FormData): Promi
   if (booking.status === "pending_payment") {
     const result = await closeCheckout(booking.stripe_checkout_session_id);
     if (result === "paid") {
-      revalidatePath("/account");
+      invalidateClientPages();
       return { message: "Your deposit had already gone through, so this booking is confirmed." };
     }
     if (result === "unknown") return { error: "We couldn't reach our payment provider. Please try again." };
@@ -59,7 +60,7 @@ export async function cancelBooking(_prev: FormState, formData: FormData): Promi
   const { error } = await supabase.rpc("cancel_booking", { p_booking: booking.id });
   if (error) return { error: bookingErrorMessage(error) };
 
-  revalidatePath("/account");
+  invalidateClientPages();
   redirect("/account?changed=cancelled");
 }
 
@@ -68,10 +69,14 @@ export async function releaseHold(_prev: FormState, formData: FormData): Promise
   const { supabase, booking } = await ownBooking(formData.get("booking_id"));
   if (booking?.status === "pending_payment") {
     const result = await closeCheckout(booking.stripe_checkout_session_id);
-    if (result === "paid") redirect("/account");
+    if (result === "paid") {
+      invalidateClientPages();
+      redirect("/account");
+    }
     if (result === "unknown") return { error: "We couldn't reach our payment provider. Please try again." };
     await supabase.rpc("cancel_booking", { p_booking: booking.id });
   }
+  invalidateClientPages();
   redirect("/book/schedule");
 }
 

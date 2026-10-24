@@ -91,6 +91,11 @@ export function buildSlotDays(taken: Set<number>, now = new Date()): SlotDay[] {
   return days;
 }
 
+/** Changes whenever availability does, so a kept-mounted picker resets instead of showing stale picks. */
+export function slotDaysKey(days: SlotDay[]) {
+  return days.map((d) => `${d.date}:${d.slots.filter((s) => s.available).length}`).join("|");
+}
+
 export function canChange(slotStart: string | Date, now = new Date()) {
   return new Date(slotStart).getTime() - now.getTime() >= CHANGE_CUTOFF_HOURS * 3600_000;
 }

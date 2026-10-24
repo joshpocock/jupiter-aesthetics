@@ -38,7 +38,9 @@ async function Content({ searchParams }: { searchParams: PageProps<"/book/intake
         </PageHeader>
       </div>
       <div className="mt-10">
-        <IntakeForm profile={profile} intake={intake} next={next} />
+        {/* Keyed on the saved version: Next keeps visited pages mounted, and uncontrolled inputs
+            only read defaultValue on mount, so without a remount a reopened form shows old answers. */}
+        <IntakeForm key={intake?.updated_at ?? "new"} profile={profile} intake={intake} next={next} />
       </div>
     </>
   );
