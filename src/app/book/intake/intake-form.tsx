@@ -41,8 +41,29 @@ export function IntakeForm({
   const editing = next === "/account";
   const consented = intake?.consent_version === CONSENT_VERSION;
 
+  // For an existing intake, send only what was changed; the server fills in the rest from the
+  // latest saved record, so this save can't overwrite a newer edit made elsewhere.
+  const loaded: Record<string, string> = {
+    full_name: profile.full_name ?? "",
+    phone: profile.phone ?? "",
+    date_of_birth: profile.date_of_birth ?? "",
+    address: profile.address ?? "",
+    medical_history: intake?.medical_history ?? "",
+    current_medications: intake?.current_medications ?? "",
+    allergies: intake?.allergies ?? "",
+  };
+  const submit = (formData: FormData) => {
+    if (intake) {
+      for (const [field, value] of Object.entries(loaded)) {
+        if ((formData.get(field) ?? "") === value) formData.delete(field);
+      }
+      formData.set("_partial", "1");
+    }
+    action(formData);
+  };
+
   return (
-    <ActionForm action={action} className="space-y-6">
+    <ActionForm action={submit} className="space-y-6">
       {next && <input type="hidden" name="next" value={next} />}
 
       <Section title="Contact details">

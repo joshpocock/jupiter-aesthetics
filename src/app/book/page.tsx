@@ -3,14 +3,11 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { Spinner } from "@/components/submit-button";
 
+// Every booking starts with the intake: new clients fill it in, returning clients confirm their
+// health details are still current and re-confirm consent before choosing a time.
 async function Route(): Promise<never> {
-  const { supabase, user } = await requireUser("/book");
-  const { data: intake } = await supabase
-    .from("intakes")
-    .select("client_id")
-    .eq("client_id", user.id)
-    .maybeSingle();
-  redirect(intake ? "/book/schedule" : "/book/intake");
+  await requireUser("/book");
+  redirect("/book/intake");
 }
 
 export default function Page() {

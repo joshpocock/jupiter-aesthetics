@@ -40,7 +40,7 @@ export async function rescheduleBooking(_prev: FormState, formData: FormData): P
   }
 
   invalidateClientPages();
-  redirect("/account?changed=rescheduled");
+  redirect(`/account?changed=rescheduled&booking=${booking.id}`);
 }
 
 export async function cancelBooking(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -61,7 +61,7 @@ export async function cancelBooking(_prev: FormState, formData: FormData): Promi
   if (error) return { error: bookingErrorMessage(error) };
 
   invalidateClientPages();
-  redirect("/account?changed=cancelled");
+  redirect(`/account?changed=cancelled&booking=${booking.id}`);
 }
 
 /** Backing out of Stripe Checkout lands on /book/cancelled, which offers this to free the slot. */

@@ -20,6 +20,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/book/intake
     .eq("client_id", user.id)
     .maybeSingle<Intake>();
   const editing = next === "/account";
+  const confirming = !editing && !!intake;
 
   return (
     <>
@@ -30,12 +31,20 @@ async function Content({ searchParams }: { searchParams: PageProps<"/book/intake
       )}
       <div className="mt-10">
         <PageHeader
-          eyebrow={editing ? "Your details" : "New client"}
-          title={editing ? "Update your details" : <>A little <span className="italic">about you</span></>}
+          eyebrow={editing ? "Your details" : confirming ? "Before you book" : "New client"}
+          title={
+            editing ? "Update your details" : confirming ? (
+              <>Confirm <span className="italic">your details</span></>
+            ) : (
+              <>A little <span className="italic">about you</span></>
+            )
+          }
         >
           {editing
             ? "Keep your health information current so we can care for you safely."
-            : "This helps us prepare for your consultation. It takes about five minutes."}
+            : confirming
+              ? "Check your health information is still up to date, then choose a time."
+              : "This helps us prepare for your consultation. It takes about five minutes."}
         </PageHeader>
       </div>
       <div className="mt-10">

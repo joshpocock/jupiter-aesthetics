@@ -37,7 +37,7 @@ const holdTime = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-US", { timeZone: SPA_TIME_ZONE, hour: "numeric", minute: "2-digit" });
 
 async function Content({ searchParams }: { searchParams: PageProps<"/account">["searchParams"] }) {
-  const { changed } = await searchParams;
+  const { changed, booking: changedId } = await searchParams;
   const { supabase, profile } = await requireUser("/account");
   const { data } = await supabase
     .from("bookings")
@@ -46,7 +46,16 @@ async function Content({ searchParams }: { searchParams: PageProps<"/account">["
     .order("slot_start", { ascending: false });
 
   const { active, history, resumable } = splitBookings((data ?? []) as Booking[]);
-  const notice = typeof changed === "string" ? NOTICES[changed] : undefined;
+  // Name the exact booking that was moved or cancelled, so there's no doubt which one it was.
+  const changedBooking = (data ?? []).find((b) => b.id === changedId) as Booking | undefined;
+  const notice =
+    changed === "cancelled" && changedBooking
+      ? `Your consultation on ${formatSlot(changedBooking.slot_start)} has been cancelled. It's now under Past and cancelled.`
+      : changed === "rescheduled" && changedBooking
+        ? `Your consultation has been moved to ${formatSlot(changedBooking.slot_start)}. We've kept your deposit with it.`
+        : typeof changed === "string"
+          ? NOTICES[changed]
+          : undefined;
   const firstName = profile.full_name?.split(" ")[0];
 
   return (
@@ -125,7 +134,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/account">["
             </article>
           )}
           {active.length > 0 && (
-            <Link href="/book/schedule" className="btn-secondary w-full sm:w-auto">
+            <Link href="/book" className="btn-secondary w-full sm:w-auto">
               Book another consultation
             </Link>
           )}
@@ -146,8 +155,17 @@ async function Content({ searchParams }: { searchParams: PageProps<"/account">["
           <h2 id="history" className="eyebrow text-muted">Past and cancelled</h2>
           <ul className="mt-4 divide-y divide-line rounded-[1.75rem] border border-line bg-shell">
             {history.map((b) => (
-              <li key={b.id} className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-                <span>{formatSlot(b.slot_start)}</span>
+              <li
+                key={b.id}
+                aria-current={b.id === changedId ? "true" : undefined}
+                className={`flex flex-col gap-3 px-6 py-5 first:rounded-t-[1.75rem] last:rounded-b-[1.75rem] sm:flex-row sm:items-center sm:justify-between ${
+                  b.id === changedId ? "bg-blush/40" : ""
+                }`}
+              >
+                <span>
+                  {formatSlot(b.slot_start)}
+                  {b.id === changedId && <span className="ml-2 text-sm text-clay">Just cancelled</span>}
+                </span>
                 <span className="flex flex-wrap items-center gap-2">
                   <BookingBadge status={b.status} />
                   <DepositBadge status={b.deposit_status} />

@@ -27,11 +27,33 @@ const intakeSchema = z.object({
   consent: z.literal("on", { error: "Please tick the consent box to continue." }),
 });
 
+const FIELDS = [
+  "full_name", "phone", "date_of_birth", "address",
+  "medical_history", "current_medications", "allergies",
+] as const;
+
 export async function saveIntake(_prev: FormState, formData: FormData): Promise<FormState> {
-  const parsed = intakeSchema.safeParse(Object.fromEntries(formData));
+  const { supabase, user, profile } = await requireUser("/book/intake");
+  const submitted = Object.fromEntries(formData) as Record<string, string>;
+
+  // When editing, the form sends only the fields that were changed. Fill the rest from what's
+  // saved *now*, so an edit to one section never overwrites a newer edit to another (from a
+  // second tab, another device, or a parallel test on the same account).
+  if (submitted._partial === "1") {
+    const { data: current } = await supabase
+      .from("intakes")
+      .select("medical_history, current_medications, allergies")
+      .eq("client_id", user.id)
+      .maybeSingle();
+    const saved: Record<string, string | null | undefined> = { ...profile, ...current };
+    for (const field of FIELDS) {
+      if (!(field in submitted)) submitted[field] = saved[field] ?? "";
+    }
+  }
+
+  const parsed = intakeSchema.safeParse(submitted);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { supabase } = await requireUser("/book/intake");
   const { full_name, phone, date_of_birth, address, medical_history, current_medications, allergies } =
     parsed.data;
 
