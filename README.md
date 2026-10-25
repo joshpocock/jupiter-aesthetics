@@ -60,6 +60,15 @@ node --env-file=.env.local scripts/test-accounts.mjs create unpaid --base-url ht
 node --env-file=.env.local scripts/test-accounts.mjs cleanup
 ```
 
+If the suite reuses one shared login instead, reset that account to a known starting point
+**before every run** (three confirmed, paid consultations 3–5 days out, plus one unpaid booking awaiting
+deposit; the account and intake are kept), and run the tests one at a time so they don't change the
+account under each other:
+
+```bash
+node --env-file=.env.local scripts/test-accounts.mjs reset josh@executivestride.com
+```
+
 States: `new`, `intake`, `unpaid` (with an open Checkout), `released`, `confirmed`, `owner`. Credentials
 go to `.test-account.json` (git-ignored). Only `@example.test` addresses are ever created or deleted.
 For full isolation, point the script and a preview deployment at a separate Supabase test project.

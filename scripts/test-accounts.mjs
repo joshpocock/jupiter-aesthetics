@@ -148,10 +148,62 @@ async function cleanup() {
   console.log(`Deleted ${deleted} @${DOMAIN} test account(s).`);
 }
 
+/**
+ * Puts a long-lived shared test account back into one known starting state, for suites that
+ * reuse a single login instead of fresh accounts. Run it before every test run:
+ *   three confirmed, paid consultations 3-5 days out (view / reschedule / cancel tests each have one)
+ *   one unpaid booking 6 days out, shown under Upcoming as "Awaiting deposit" with Resume payment
+ * The account, its role and its intake answers are kept; every other booking is removed.
+ */
+async function reset(email) {
+  if (!email) throw new Error("reset needs the account's email address");
+  const { data: p, error } = await admin.from("profiles").select("id, email").eq("email", email).maybeSingle();
+  if (error) throw error;
+  if (!p) throw new Error(`No account for ${email}`);
+
+  const { data: old } = await admin.from("bookings").select("stripe_checkout_session_id").eq("client_id", p.id);
+  for (const b of old ?? []) {
+    if (!b.stripe_checkout_session_id) continue;
+    const s = await stripe.checkout.sessions.retrieve(b.stripe_checkout_session_id);
+    if (s.status === "open") await stripe.checkout.sessions.expire(s.id);
+  }
+  const del = await admin.from("bookings").delete().eq("client_id", p.id);
+  if (del.error) throw del.error;
+
+  const { data: intake } = await admin.from("intakes").select("client_id").eq("client_id", p.id).maybeSingle();
+  if (!intake) {
+    const r = await admin.from("intakes").insert({
+      client_id: p.id, medical_history: "None", current_medications: "None", allergies: "None",
+      consent_version: "2026-10-v1",
+    });
+    if (r.error) throw r.error;
+  }
+
+  const seeded = [];
+  for (const daysAhead of [3, 4, 5]) {
+    const slot = await freeSlot(daysAhead);
+    const r = await admin.from("bookings").insert({
+      client_id: p.id, slot_start: slot, status: "confirmed", deposit_status: "paid", paid_at: new Date().toISOString(),
+    });
+    if (r.error) throw r.error;
+    seeded.push(`confirmed+paid ${slot}`);
+  }
+  const unpaidSlot = await freeSlot(6);
+  const r = await admin.from("bookings").insert({
+    client_id: p.id, slot_start: unpaidSlot, status: "expired",
+    hold_expires_at: new Date(Date.now() - 60_000).toISOString(),
+  });
+  if (r.error) throw r.error;
+  seeded.push(`unpaid (awaiting deposit) ${unpaidSlot}`);
+
+  console.log(`Reset ${p.email}: removed ${old?.length ?? 0} booking(s); now has\n  ${seeded.join("\n  ")}`);
+}
+
 const [command, state] = process.argv.slice(2);
 if (command === "create") await create(state);
 else if (command === "cleanup") await cleanup();
+else if (command === "reset") await reset(state);
 else {
-  console.error("Usage: test-accounts.mjs create <state> [--base-url URL] [--out FILE] | cleanup");
+  console.error("Usage: test-accounts.mjs create <state> [--base-url URL] [--out FILE] | cleanup | reset <email>");
   process.exit(1);
 }
