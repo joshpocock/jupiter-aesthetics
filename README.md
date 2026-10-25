@@ -52,7 +52,7 @@ node --env-file=.env.local scripts/verify-db.mjs
 ## Automated end-to-end tests
 
 Give every scenario its own disposable account so scenarios can't cancel, move or pay each other's
-bookings, or hit the three-upcoming-bookings limit. Create one in the state the scenario needs, and
+bookings. Create one in the state the scenario needs, and
 delete them all afterwards:
 
 ```bash
@@ -74,7 +74,7 @@ For full isolation, point the script and a preview deployment at a separate Supa
 - **Deposit** – choosing a time always books a new consultation: a `pending_payment` booking held for
   35 minutes and a Checkout session that expires after 31. `checkout.session.completed` (or the success
   page) confirms it; `checkout.session.expired` or backing out of Checkout releases the slot. A client can
-  have up to three upcoming bookings, each with its own deposit; holds don't release each other. A
+  have any number of upcoming bookings, each with its own deposit; holds don't release each other. A
   released unpaid hold offers "Resume payment", which re-takes the same time if it's still free.
 - **Changes** – clients can reschedule or cancel up to 24 hours before. Cancelling does **not** refund the
   deposit automatically; the owner view shows "Paid, not attending" so the owner can refund in Stripe.

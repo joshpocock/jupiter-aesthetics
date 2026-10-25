@@ -31,13 +31,15 @@ export function SlotPicker({
   const [state, formAction] = useActionState(action, undefined);
   const firstOpen = days.find((d) => d.slots.some((s) => s.available && s.iso !== current))?.date ?? days[0]?.date;
   const [day, setDay] = useState(firstOpen);
-  const [slot, setSlot] = useState<string | null>(null);
-  const selectedDay = days.find((d) => d.date === day);
-  const [seenState, setSeenState] = useState(state);
-  if (state !== seenState) {
-    setSeenState(state);
-    if (state?.error) setSlot(null);
-  }
+  const [pickedSlot, setSlot] = useState<string | null>(null);
+  // The picker stays mounted when availability refreshes (so an error message stays visible);
+  // a picked time only counts while it is still open in the latest list.
+  const slot =
+    pickedSlot &&
+    days.some((d) => d.slots.some((s) => s.iso === pickedSlot && s.available && s.iso !== current))
+      ? pickedSlot
+      : null;
+  const selectedDay = days.find((d) => d.date === day) ?? days.find((d) => d.date === firstOpen);
 
   if (days.length === 0) {
     return (

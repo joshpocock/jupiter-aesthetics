@@ -1,6 +1,9 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { useFormStatus } from "react-dom";
+
+const noopSubscribe = () => () => {};
 
 export function Spinner() {
   return (
@@ -27,8 +30,11 @@ export function SubmitButton({
 }) {
   const status = useFormStatus();
   const pending = pendingProp ?? status.pending;
+  // false in the server HTML and until hydration, then true: no submitting before the form's
+  // JavaScript (validation, no-reset handling) is attached.
+  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
   return (
-    <button type="submit" disabled={pending || disabled} aria-busy={pending} className={className}>
+    <button type="submit" disabled={!hydrated || pending || disabled} aria-busy={pending} className={className}>
       {pending ? (
         <>
           <Spinner />

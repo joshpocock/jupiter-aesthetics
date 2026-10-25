@@ -13,7 +13,7 @@ import type { Booking } from "@/lib/types";
 /**
  * Holds a slot and sends the client to a fresh Stripe Checkout for the deposit. Both new
  * bookings and "Resume payment" on a released hold go through here, so the no-double-booking
- * and three-upcoming-bookings rules in create_pending_booking always apply.
+ * rules in create_pending_booking always apply.
  */
 async function holdAndCheckout(slotIso: string, from: string): Promise<FormState> {
   const { supabase, user } = await requireUser(from);

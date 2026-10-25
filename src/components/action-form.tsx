@@ -18,6 +18,10 @@ export function ActionForm({
   return (
     <form
       {...props}
+      // Never GET: if this form were ever submitted natively (before the page's JavaScript runs),
+      // a GET would put every field, passwords included, in the URL. SubmitButton also stays
+      // disabled until hydration, so that can't normally happen.
+      method="post"
       onSubmit={(e) => {
         e.preventDefault();
         const submitter = (e.nativeEvent as SubmitEvent).submitter;

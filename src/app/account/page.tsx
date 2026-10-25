@@ -124,7 +124,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/account">["
               </div>
             </article>
           )}
-          {active.length > 0 && active.length < 3 && (
+          {active.length > 0 && (
             <Link href="/book/schedule" className="btn-secondary w-full sm:w-auto">
               Book another consultation
             </Link>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { requireUser, safeNext } from "@/lib/auth";
+import { renderKey } from "@/lib/fresh";
 import type { Intake } from "@/lib/types";
 import { PageHeader, PageShell } from "@/components/brand";
 import { BookingSteps } from "../booking-steps";
@@ -38,9 +39,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/book/intake
         </PageHeader>
       </div>
       <div className="mt-10">
-        {/* Keyed on the saved version: Next keeps visited pages mounted, and uncontrolled inputs
-            only read defaultValue on mount, so without a remount a reopened form shows old answers. */}
-        <IntakeForm key={intake?.updated_at ?? "new"} profile={profile} intake={intake} next={next} />
+        {/* A fresh key per visit, so the form always opens with what's saved (see renderKey). */}
+        <IntakeForm key={renderKey()} profile={profile} intake={intake} next={next} />
       </div>
     </>
   );

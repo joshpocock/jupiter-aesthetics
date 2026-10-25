@@ -136,10 +136,9 @@ try {
   const freed = await otherId.client.rpc("create_pending_booking", { p_slot: slot });
   check("old slot is free after reschedule", !freed.error, freed.error?.message);
 
-  // otherId now has three upcoming unpaid holds (testSlot 4, 5 and the freed slot).
+  // otherId already has three upcoming unpaid holds (testSlot 4, 5 and the freed slot).
   const fourth = await otherId.client.rpc("create_pending_booking", { p_slot: testSlot(6) });
-  check("no more than three upcoming bookings per client", fourth.error?.message === "too_many_bookings",
-    fourth.error?.message ?? "fourth booking was allowed");
+  check("no limit on upcoming bookings per client", !fourth.error, fourth.error?.message);
 
   const cancelled = await winnerId.client.rpc("cancel_booking", { p_booking: bookingId }).single();
   check("cancel works and leaves deposit paid",
